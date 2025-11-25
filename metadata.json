@@ -1,0 +1,5 @@
+{
+  "name": "Progressive Recall English Writing App",
+  "description": "An application to improve English writing skills through text reconstruction exercises. Users can select proficiency levels and topics, then practice writing in a focused environment with AI-powered feedback.",
+  "requestFramePermissions": []
+}

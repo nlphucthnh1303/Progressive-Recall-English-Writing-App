@@ -1,0 +1,286 @@
+<style>
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+  .wysiwyg-editor[contenteditable]:focus {
+    outline: none;
+    --tw-ring-color: theme(colors.primary / 50%);
+    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+    box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  }
+  .wysiwyg-editor p { margin-bottom: 1rem; }
+  .wysiwyg-editor b, .wysiwyg-editor strong { font-weight: bold; }
+  .wysiwyg-editor i, .wysiwyg-editor em { font-style: italic; }
+  .wysiwyg-editor ul { list-style-type: disc; list-style-position: inside; padding-left: 1rem; margin-bottom: 1rem; }
+  .wysiwyg-editor blockquote { border-left-width: 4px; border-color: theme(colors.gray.300); padding-left: 1rem; font-style: italic; margin-block: 1rem; }
+  .dark .wysiwyg-editor blockquote { border-color: theme(colors.gray.600); }
+  .floating-toolbar { visibility: hidden; opacity: 0; transition: all 200ms; }
+  .wysiwyg-wrapper:focus-within .floating-toolbar { visibility: visible; opacity: 1; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .animate-fade-in-up {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+</style>
+
+@if (currentView() === 'selection') {
+<div class="relative flex min-h-screen w-full flex-col items-center">
+  <div class="flex h-full w-full max-w-4xl flex-col p-4 md:p-8">
+    <header class="flex flex-wrap justify-between items-center gap-3 p-4">
+      <div class="flex flex-col gap-2 text-center sm:text-left">
+        <h1 class="text-[#0d191b] dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">Lesson Selection</h1>
+        <p class="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">Choose your proficiency level and a topic to begin.</p>
+      </div>
+    </header>
+
+    <main class="flex flex-col gap-12 py-8">
+      <section class="flex flex-col gap-4">
+        <h2 class="text-center text-lg font-bold text-[#0d191b] dark:text-white">Select a Level</h2>
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
+          @for (level of levels; track level.id) {
+          <label class="group flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-transparent bg-slate-100 p-4 text-center transition-colors duration-200 hover:border-primary/50 dark:bg-slate-800/50 has-[:checked]:border-primary has-[:checked]:bg-primary/10 has-[:checked]:text-primary dark:has-[:checked]:bg-primary/20">
+            <span class="text-2xl font-bold">{{ level.name }}</span>
+            <span class="text-xs font-medium text-slate-500 group-has-[:checked]:text-primary dark:group-has-[:checked]:text-primary/90">{{ level.description }}</span>
+            <input type="radio" name="level-selection" [value]="level.id" [checked]="selectedLevel() === level.id" (change)="onLevelChange(level.id)" class="sr-only" />
+          </label>
+          }
+        </div>
+      </section>
+
+      <section class="flex flex-col gap-4">
+        <h2 class="text-center text-lg font-bold text-[#0d191b] dark:text-white">Select a Topic</h2>
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          @for (category of topicData; track category.category) {
+          <div class="flex flex-col gap-4">
+            <h3 class="text-center font-bold text-slate-600 dark:text-slate-300 md:text-left">{{ category.category }}</h3>
+            <div class="grid grid-cols-2 gap-4">
+              @for (topic of category.topics; track topic.id) {
+              <label class="group flex cursor-pointer items-center justify-center rounded-xl border border-transparent bg-slate-100 p-4 text-center text-sm font-medium transition-colors duration-200 hover:border-primary/50 dark:bg-slate-800/50 has-[:checked]:border-primary has-[:checked]:bg-primary/10 has-[:checked]:text-primary dark:has-[:checked]:bg-primary/20">
+                <span>{{ topic.name }}</span>
+                <input type="radio" name="topic-selection" [value]="topic.id" [checked]="selectedTopic() === topic.id" (change)="onTopicChange(topic.id)" class="sr-only" />
+              </label>
+              }
+            </div>
+          </div>
+          }
+        </div>
+      </section>
+
+      <div class="flex justify-center p-4 pt-12">
+        <button (click)="startLesson()" class="flex items-center justify-center gap-2 rounded-xl bg-primary px-12 py-4 text-lg font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95">
+          <span>Start Lesson</span>
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+    </main>
+  </div>
+</div>
+} @else {
+<div class="relative flex min-h-screen w-full">
+  <main class="w-full">
+    @if(studyModalVisible()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div class="relative w-full max-w-2xl mx-4 rounded-xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800 p-6 md:p-8 animate-fade-in-up">
+        <div class="flex flex-col gap-4">
+          <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Study the Text</h2>
+          <p class="text-slate-500 dark:text-slate-400">Read the following text carefully. You will be asked to reconstruct it from memory.</p>
+          <div class="mt-4 p-6 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+            <p class="text-slate-700 dark:text-slate-200 leading-relaxed">{{ lesson()?.originalText }}</p>
+          </div>
+          <div class="mt-6 flex justify-end">
+            <button (click)="startWriting()" class="flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-3 text-lg font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95">
+              <span>I'm Ready to Write</span>
+              <span class="material-symbols-outlined">edit</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+
+    <div class="grid grid-cols-1 lg:grid-cols-4">
+      <div class="lg:col-span-3">
+        <div class="flex h-full flex-col p-6 lg:p-10">
+          <div class="flex flex-grow flex-col gap-6 max-w-4xl mx-auto w-full">
+            <header class="flex items-start sm:items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                 <button (click)="backToSelection()" class="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <div class="flex flex-col gap-0">
+                  <h1 class="text-slate-900 dark:text-white text-2xl md:text-3xl font-black leading-tight tracking-tight">{{ lessonTitle() }}</h1>
+                  <p class="text-slate-500 dark:text-gray-400 text-base font-normal leading-normal">Reconstruct the text based on the key points provided.</p>
+                </div>
+              </div>
+              <div class="flex-shrink-0">
+                <div class="rounded-full bg-slate-100 dark:bg-slate-800 px-4 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300">
+                  Mức độ ẩn: {{ currentMaskingPercentage() }}%
+                </div>
+              </div>
+            </header>
+            
+            @if(isGeneratingLesson()) {
+              <div class="flex flex-col items-center justify-center gap-4 min-h-[500px]">
+                <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-slate-500 dark:text-slate-400">Generating your lesson...</p>
+              </div>
+            } @else {
+              <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-background-dark p-6 lg:p-8">
+                <p class="text-slate-700 dark:text-gray-300 text-base font-normal leading-relaxed italic">{{ maskedReferenceText() }}</p>
+              </div>
+
+              @if (lessonCompleted()) {
+                <div class="flex flex-col items-center justify-center gap-4 min-h-[350px] rounded-lg bg-white dark:bg-gray-900 p-6 text-center">
+                  <span class="material-symbols-outlined !text-6xl text-green-500">task_alt</span>
+                  <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Lesson Completed!</h2>
+                  <p class="text-slate-500 dark:text-slate-400">Great work! You've mastered this topic.</p>
+                  <button (click)="backToSelection()" class="mt-4 rounded-lg bg-primary px-8 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-primary/90">
+                      Back to Lessons
+                  </button>
+                </div>
+              } @else {
+                <div class="relative wysiwyg-wrapper group flex-grow flex flex-col">
+                  <div class="floating-toolbar absolute z-10 -top-14 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-lg bg-slate-900 dark:bg-black p-1 shadow-lg border border-gray-700">
+                    <button class="p-2 rounded-md text-white hover:bg-slate-700 focus:bg-slate-700 focus:outline-none"><span class="material-symbols-outlined !text-base !font-bold">format_bold</span></button>
+                    <button class="p-2 rounded-md text-white hover:bg-slate-700 focus:bg-slate-700 focus:outline-none"><span class="material-symbols-outlined !text-base !font-bold">format_italic</span></button>
+                    <button class="p-2 rounded-md text-white hover:bg-slate-700 focus:bg-slate-700 focus:outline-none"><span class="material-symbols-outlined !text-base !font-bold">format_strikethrough</span></button>
+                    <div class="w-px h-5 bg-slate-600"></div>
+                    <button class="p-2 rounded-md text-white hover:bg-slate-700 focus:bg-slate-700 focus:outline-none"><span class="material-symbols-outlined !text-base !font-bold">format_list_bulleted</span></button>
+                    <button class="p-2 rounded-md text-white hover:bg-slate-700 focus:bg-slate-700 focus:outline-none"><span class="material-symbols-outlined !text-base !font-bold">format_quote</span></button>
+                    <button class="p-2 rounded-md text-white hover:bg-slate-700 focus:bg-slate-700 focus:outline-none"><span class="material-symbols-outlined !text-base !font-bold">code</span></button>
+                  </div>
+                  @if (!isGraded()) {
+                  <div #editor class="wysiwyg-editor w-full flex-grow min-h-[350px] rounded-lg bg-white dark:bg-gray-900 p-6 text-base font-normal leading-relaxed text-slate-900 dark:text-white transition-colors" contenteditable="true" [innerHTML]="userInputTemplate">
+                  </div>
+                  } @else {
+                  <div class="w-full flex-grow min-h-[350px] rounded-lg bg-white dark:bg-gray-900 p-6 text-base font-normal leading-relaxed text-slate-900 dark:text-white" [innerHTML]="gradedContent()">
+                  </div>
+                  }
+                </div>
+                
+                <div class="flex justify-end items-center pt-4 gap-4">
+                  @if (isGraded() && !isLoading()) {
+                    @if(feedbackData().score < 80) {
+                      <button (click)="tryAgain()" class="rounded-lg bg-slate-200 dark:bg-slate-700 px-8 py-3 text-base font-bold text-slate-800 dark:text-white shadow-sm transition-colors hover:bg-slate-300 dark:hover:bg-slate-600">Try Again</button>
+                    } @else {
+                      <button (click)="nextLevel()" class="rounded-lg bg-green-500 px-8 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-green-600">Next Level</button>
+                    }
+                  }
+                  <button (click)="checkAnswers()" [disabled]="isLoading() || isGraded()" class="flex items-center justify-center gap-3 rounded-lg bg-primary px-8 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:shadow-none">
+                    @if (isLoading()) {
+                    <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Processing...</span>
+                    } @else {
+                    <span>Check Answers</span>
+                    }
+                  </button>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+      <aside class="col-span-1 hidden lg:block bg-white dark:bg-gray-900/50 border-l border-gray-200 dark:border-gray-800">
+        <div class="sticky top-0 p-6 lg:p-8 h-screen overflow-y-auto">
+          <div class="flex flex-col gap-6">
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-background-light dark:bg-background-dark p-6">
+              <h3 class="text-base font-bold text-slate-800 dark:text-gray-200 mb-4">Overall Score</h3>
+              @if (isLoading() || isGeneratingLesson()) {
+              <div class="flex items-center justify-center size-40 mx-auto animate-pulse">
+                <div class="size-full rounded-full bg-slate-200 dark:bg-slate-700"></div>
+              </div>
+              } @else {
+              <div class="relative flex items-center justify-center size-40 mx-auto">
+                <svg class="size-full" viewBox="0 0 36 36">
+                  <circle class="stroke-gray-200 dark:stroke-gray-700" cx="18" cy="18" fill="none" r="16" stroke-width="3"></circle>
+                  <circle class="stroke-green-500 transition-all duration-500" cx="18" cy="18" fill="none" r="16" stroke-dasharray="100.53" [attr.stroke-dashoffset]="getScoreDashOffset()" stroke-linecap="round" stroke-width="3" transform="rotate(-90 18 18)"></circle>
+                </svg>
+                <span class="absolute text-3xl font-bold text-slate-800 dark:text-white">{{ feedbackData().score }}%</span>
+              </div>
+              }
+            </div>
+             <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-background-light dark:bg-background-dark p-6">
+                <h3 class="text-base font-bold text-slate-800 dark:text-gray-200 mb-4">Proficiency Analysis</h3>
+                @if (isLoading() || isGeneratingLesson()) {
+                  <div class="flex items-center justify-center aspect-square mx-auto animate-pulse">
+                    <div class="size-full rounded-full bg-slate-200 dark:bg-slate-700"></div>
+                  </div>
+                } @else {
+                  <div class="relative flex items-center justify-center aspect-square max-w-[200px] mx-auto">
+                      <svg class="size-full" viewBox="0 0 100 100">
+                          <!-- Grid lines and labels -->
+                          @for (item of radarChartGrid(); track item.label) {
+                            <line [attr.x1]="item.line.x1" [attr.y1]="item.line.y1" [attr.x2]="item.line.x2" [attr.y2]="item.line.y2" class="stroke-slate-200 dark:stroke-slate-700" stroke-width="0.5"></line>
+                            <text [attr.x]="item.labelPos.x" [attr.y]="item.labelPos.y" font-size="6" text-anchor="middle" alignment-baseline="middle" class="fill-slate-500 dark:fill-slate-400 font-medium">{{ item.label }}</text>
+                          }
+                          <!-- Concentric polygons -->
+                          @for (polygon of radarChartPolygons(); track $index) {
+                            <polygon [attr.points]="polygon.points" class="fill-none stroke-slate-200 dark:stroke-slate-700" stroke-width="0.5"></polygon>
+                          }
+                          <!-- Data polygon -->
+                          <polygon [attr.points]="radarChartPoints()" class="fill-primary/20 stroke-primary" stroke-width="1.5"></polygon>
+                      </svg>
+                  </div>
+                }
+            </div>
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-background-light dark:bg-background-dark p-6">
+              <h3 class="text-base font-bold text-slate-800 dark:text-gray-200 mb-4">Strengths</h3>
+               @if (isLoading() || isGeneratingLesson()) {
+                <ul class="space-y-3 animate-pulse">
+                  <li class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></li>
+                  <li class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></li>
+                </ul>
+                } @else {
+                <ul class="space-y-3">
+                  @if(!feedbackData().strengths.length) {
+                    <p class="text-sm text-slate-500 dark:text-slate-400 italic">No strengths identified yet. Complete the exercise to get feedback.</p>
+                  } @else {
+                    @for(strength of feedbackData().strengths; track strength) {
+                    <li class="flex items-start gap-3">
+                      <span class="material-symbols-outlined text-green-500 mt-0.5">check_circle</span>
+                      <span class="text-slate-600 dark:text-gray-400 text-sm">{{ strength }}</span>
+                    </li>
+                    }
+                  }
+                </ul>
+                }
+            </div>
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-background-light dark:bg-background-dark p-6">
+              <h3 class="text-base font-bold text-slate-800 dark:text-gray-200 mb-4">Areas for Improvement</h3>
+               @if (isLoading() || isGeneratingLesson()) {
+                <ul class="space-y-3 animate-pulse">
+                  <li class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-4/5"></li>
+                  <li class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-5/6"></li>
+                </ul>
+                } @else {
+                <ul class="space-y-3">
+                   @if(!feedbackData().improvements.length) {
+                    <p class="text-sm text-slate-500 dark:text-slate-400 italic">No areas for improvement identified yet. Let's see how you do!</p>
+                  } @else {
+                    @for(improvement of feedbackData().improvements; track improvement) {
+                    <li class="flex items-start gap-3">
+                      <span class="material-symbols-outlined text-red-500 mt-0.5">cancel</span>
+                      <span class="text-slate-600 dark:text-gray-400 text-sm">{{ improvement }}</span>
+                    </li>
+                    }
+                  }
+                </ul>
+                }
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+}
