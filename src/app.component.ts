@@ -49,6 +49,7 @@ export class AppComponent {
   currentDifficultyIndex = signal(0);
   lessonCompleted = signal(false);
   lesson = signal<Lesson | null>(null);
+  userInputContent = signal('<p><br></p>');
 
   // Static data
   levels: Level[] = [
@@ -195,16 +196,10 @@ export class AppComponent {
     return gridItems;
   });
 
-  userInputTemplate = `
-    <p>Dear Team,</p>
-    <p>This is a brief update about the Q3 project. We've successfully concluded the initial phase, receiving exceptionally positive feedback from the client. They highlight their appreciation for our meticulous attention to detail.</p>
-    <p>Our next focus is the upcoming milestone. The revised timeline is attached for your convenience. Please don't hesitate to reach out with any questions.</p>
-    <p>Best regards,<br/>Alex</p>
-  `;
-
   async checkAnswers() {
     if (!this.editor || !this.lesson()) return;
     const userInput = this.editor.nativeElement.innerHTML;
+    this.userInputContent.set(userInput);
 
     this.isLoading.set(true);
     this.isGraded.set(false);
@@ -261,6 +256,7 @@ export class AppComponent {
       this.isGraded.set(false);
       this.gradedContent.set('');
       this.resetFeedback();
+      this.userInputContent.set('<p><br></p>');
     }
   }
 
@@ -292,6 +288,7 @@ export class AppComponent {
     this.gradedContent.set('');
     this.resetFeedback();
     this.lesson.set(null);
+    this.userInputContent.set('<p><br></p>');
 
     const generatedText = await this.geminiService.generateSample(this.selectedLevel(), this.selectedTopic());
     

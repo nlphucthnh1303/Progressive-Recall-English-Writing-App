@@ -89,7 +89,7 @@
           <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Study the Text</h2>
           <p class="text-slate-500 dark:text-slate-400">Read the following text carefully. You will be asked to reconstruct it from memory.</p>
           <div class="mt-4 p-6 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-            <p class="text-slate-700 dark:text-slate-200 leading-relaxed">{{ lesson()?.originalText }}</p>
+            <p class="text-slate-700 dark:text-slate-200 leading-relaxed select-none">{{ lesson()?.originalText }}</p>
           </div>
           <div class="mt-6 flex justify-end">
             <button (click)="startWriting()" class="flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-3 text-lg font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95">
@@ -157,7 +157,7 @@
                     <button class="p-2 rounded-md text-white hover:bg-slate-700 focus:bg-slate-700 focus:outline-none"><span class="material-symbols-outlined !text-base !font-bold">code</span></button>
                   </div>
                   @if (!isGraded()) {
-                  <div #editor class="wysiwyg-editor w-full flex-grow min-h-[350px] rounded-lg bg-white dark:bg-gray-900 p-6 text-base font-normal leading-relaxed text-slate-900 dark:text-white transition-colors" contenteditable="true" [innerHTML]="userInputTemplate">
+                  <div #editor class="wysiwyg-editor w-full flex-grow min-h-[350px] rounded-lg bg-white dark:bg-gray-900 p-6 text-base font-normal leading-relaxed text-slate-900 dark:text-white transition-colors" contenteditable="true" [innerHTML]="userInputContent()">
                   </div>
                   } @else {
                   <div class="w-full flex-grow min-h-[350px] rounded-lg bg-white dark:bg-gray-900 p-6 text-base font-normal leading-relaxed text-slate-900 dark:text-white" [innerHTML]="gradedContent()">
